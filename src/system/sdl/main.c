@@ -971,6 +971,11 @@ static void processGamepad()
 
                 if(gamepad)
                 {
+                    const u8 triggerRight = getAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT, +1);
+                    const u8 triggerLeft = getAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT, +1);
+                    const u8 shoulderLeft = getButton(controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+                    const u8 shoulderRight = getButton(controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+
                     gamepad->up = getAxis(controller, SDL_CONTROLLER_AXIS_LEFTY, -1)
                         || getAxis(controller, SDL_CONTROLLER_AXIS_RIGHTY, -1)
                         || getButton(controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
@@ -1007,6 +1012,13 @@ static void processGamepad()
                     gamepad->x = getButton(controller, SDL_CONTROLLER_BUTTON_X);
                     gamepad->y = getButton(controller, SDL_CONTROLLER_BUTTON_Y);
 #endif
+
+                    // Keep the original face buttons and add trigger/shoulder duplicates.
+                    gamepad->a = gamepad->a || triggerRight;
+                    gamepad->b = gamepad->b || triggerLeft;
+                    gamepad->x = gamepad->x || shoulderLeft;
+                    gamepad->y = gamepad->y || shoulderRight;
+
                     // !TODO: We have to find a better way to handle gamepad MENU button
                     // atm we show game menu for only Pause Menu button on XBox one controller
                     // issue #1220
