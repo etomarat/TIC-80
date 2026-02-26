@@ -1,8 +1,7 @@
-[![Build Status](https://github.com/nesbox/TIC-80/workflows/Build/badge.svg)](https://github.com/nesbox/TIC-80/actions?query=workflow%3ABuild)
-
 ![TIC-80](https://tic80.com/img/logo64.png)
 **TIC-80 TINY COMPUTER** — [tic80.com](https://tic80.com)
 
+- [This Fork At a Glance](#this-fork-at-a-glance)
 - [About](#about)
   - [Features](#features)
 - [Binary Downloads](#binary-downloads)
@@ -39,6 +38,16 @@
   - [Android](#android)
   - [iOS / tvOS](#ios--tvos)
   - [Credits](#credits)
+
+## This Fork At a Glance
+- Added SDL gamepad trigger/shoulder aliases: `RT -> A`, `LT -> B`, `LB -> X`, `RB -> Y`.
+  See: [Controller Trigger/Shoulder Aliases](#controller-triggershoulder-aliases-this-fork)
+- Added Python vibration API: `rumble(gamepad=0, weak=0, strong=0, duration=120) -> bool`.
+  See: [Python Rumble API](#python-rumble-api-this-fork)
+- Added compatibility fallback for carts running on stock TIC-80 builds (no `rumble()` support).
+  See wrapper example in: [Python Rumble API](#python-rumble-api-this-fork)
+- Updated CI/distribution flow in this fork: GitHub Pages export runtime hosting, HTML export fixes, and Windows/Linux/macOS build updates.
+  See: [Fork CI/Export Notes](#fork-ciexport-notes-this-fork)
 
 # About
 TIC-80 is a free and open source fantasy computer for making, playing and sharing tiny games.
@@ -89,6 +98,63 @@ Supported platforms (SDL backend):
 - Web (Emscripten/HTML build)
 
 Other backends (for example libretro/3DS/Switch/baremetal) are unchanged.
+
+### Python Rumble API (this fork)
+This fork also adds gamepad vibration from Python carts:
+
+`rumble(gamepad=0, weak=0, strong=0, duration=120) -> bool`
+
+Parameters:
+
+- `gamepad`: controller index (`0..3`) or `-1` for all connected gamepads.
+- `weak`: low-frequency motor strength (`0..65535`).
+- `strong`: high-frequency motor strength (`0..65535`).
+- `duration`: vibration time in milliseconds (`>= 0`).
+
+Return value:
+
+- `True`: rumble request was accepted by the backend/controller.
+- `False`: rumble is not available on current backend/device/driver, or no suitable controller is connected.
+
+Notes:
+
+- Rumble is implemented in the SDL backend.
+- Existing game input behavior is unchanged.
+- If rumble is unsupported, your cart continues to run; only `rumble()` returns `False`.
+
+Example:
+
+```python
+def TIC():
+    # Press A/South (btn id 4) to trigger a short vibration pulse.
+    if btnp(4):
+        ok = rumble(0, 16000, 32000, 120)
+        if not ok:
+            print("RUMBLE NOT SUPPORTED", 4, 4, 2)
+```
+
+Compatibility wrapper (works on builds with and without `rumble()`):
+
+```python
+def safe_rumble(gamepad=0, weak=0, strong=0, duration=120):
+    try:
+        return rumble(gamepad, weak, strong, duration)
+    except:
+        # No rumble API (stock TIC-80) or backend/device doesn't support it.
+        return False
+
+def TIC():
+    if btnp(4):  # A / South
+        safe_rumble(0, 16000, 32000, 120)
+```
+
+### Fork CI/Export Notes (this fork)
+Summary of additional fork changes (from this fork's commit history):
+
+- Added GitHub Pages self-hosted export runtimes and Windows PRO CI build.
+- Fixed HTML export pipeline issues.
+- Added/updated CI jobs for Windows and Linux builds/export runtime.
+- Added macOS universal build, executable permission fix, and verbose logging.
 
 # Binary Downloads
 

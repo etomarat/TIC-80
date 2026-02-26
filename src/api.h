@@ -34,6 +34,7 @@ typedef void(*ErrorOutput)(void*, const char*);
 typedef void(*ExitCallback)(void*);
 typedef u64(*CounterCallback)(void*);
 typedef u64(*FreqCallback)(void*);
+typedef bool(*RumbleCallback)(void*, s32 gamepad, u16 weak, u16 strong, u32 duration);
 
 typedef struct
 {
@@ -43,6 +44,7 @@ typedef struct
 
     CounterCallback counter;
     FreqCallback freq;
+    RumbleCallback rumble;
     u64 start;
 
     void* data;

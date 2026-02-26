@@ -169,6 +169,7 @@ build/*.vcxproj.user
 build/CMakeDoxyfile.in
 build/*.sln
 build/.local/
+/.local/
 build/*.dir/
 build/x64/
 build/linux/tic80.desktop

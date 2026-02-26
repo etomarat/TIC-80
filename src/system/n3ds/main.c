@@ -191,6 +191,15 @@ u64 tic_sys_freq_get()
     return SYSCLOCK_ARM11;
 }
 
+bool tic_sys_gamepad_rumble(s32 gamepad, u16 weak, u16 strong, u32 duration)
+{
+    (void)gamepad;
+    (void)weak;
+    (void)strong;
+    (void)duration;
+    return false;
+}
+
 void tic_sys_fullscreen_set(bool value)
 {
 }

@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include "pocketpy.h"
 
@@ -33,6 +34,24 @@ static void log_and_clearexc(py_Ref p0)
     core->data->error(core->data->data, msg);
     PK_FREE(msg);
     py_clearexc(p0);
+}
+
+static void rumble_debug_log(const char* fmt, ...)
+{
+#if defined(__TIC_WINDOWS__)
+    FILE* out = fopen("tic80_rumble_debug.log", "a");
+    if(!out) return;
+
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(out, fmt, args);
+    va_end(args);
+
+    fputc('\n', out);
+    fclose(out);
+#else
+    (void)fmt;
+#endif
 }
 
 static int prepare_colorindex(py_Ref index, u8* buffer)
@@ -944,6 +963,58 @@ static bool py_time(int argc, py_Ref argv)
     return true;
 }
 
+// rumble(gamepad=0, weak=0, strong=0, duration=120) -> bool
+static bool py_rumble(int argc, py_Ref argv)
+{
+    PY_CHECK_ARGC(4);
+    PY_CHECK_ARG_TYPE(0, tp_int);
+    PY_CHECK_ARG_TYPE(1, tp_int);
+    PY_CHECK_ARG_TYPE(2, tp_int);
+    PY_CHECK_ARG_TYPE(3, tp_int);
+
+    s32 gamepad = py_toint(py_arg(0));
+    s32 weak = py_toint(py_arg(1));
+    s32 strong = py_toint(py_arg(2));
+    s32 duration = py_toint(py_arg(3));
+
+    rumble_debug_log("py_rumble enter argc=%d gp=%d weak=%d strong=%d dur=%d",
+        argc, gamepad, weak, strong, duration);
+
+    if (gamepad < -1 || gamepad >= TIC_GAMEPADS)
+    {
+        return ValueError("invalid gamepad index");
+    }
+
+    if (weak < 0 || weak > 0xffff)
+    {
+        return ValueError("`weak` should be in [0, 65535]");
+    }
+
+    if (strong < 0 || strong > 0xffff)
+    {
+        return ValueError("`strong` should be in [0, 65535]");
+    }
+
+    if (duration < 0)
+    {
+        return ValueError("`duration` should be >= 0");
+    }
+
+    tic_core* core = get_core();
+    rumble_debug_log("py_rumble core=%p data=%p rumble_cb=%p",
+        (void*)core,
+        core ? (void*)core->data : NULL,
+        (core && core->data) ? (void*)core->data->rumble : NULL);
+
+    bool ok = core->data && core->data->rumble
+        ? core->data->rumble(core->data->data, gamepad, (u16)weak, (u16)strong, (u32)duration)
+        : false;
+    rumble_debug_log("py_rumble result=%d", ok ? 1 : 0);
+
+    py_newbool(py_retval(), ok);
+    return true;
+}
+
 // trace(message, color=15)
 // void (*trace)(tic_mem*, const char*, u8)
 static bool py_trace(int argc, py_Ref argv)
@@ -1079,6 +1150,7 @@ static void bind_pkpy_v2()
     py_bind(mod, "rect(x: int, y: int, w: int, h: int, color: int)", py_rect);
     py_bind(mod, "rectb(x: int, y: int, w: int, h: int, color: int)", py_rectb);
     py_bind(mod, "reset()", py_reset);
+    py_bind(mod, "rumble(gamepad=0, weak=0, strong=0, duration=120) -> bool", py_rumble);
     py_bind(mod, "sfx(id: int, note=-1, duration=-1, channel=0, volume=15, speed=0)", py_sfx);
     py_bind(mod, "sync(mask=0, bank=0, tocart=False)", py_sync);
     py_bind(mod, "ttri(x1: float, y1: float, x2: float, y2: float, x3: float, y3: float, u1: float, v1: float, u2: float, v2: float, u3: float, v3: float, texsrc=0, chromakey=-1, z1=0.0, z2=0.0, z3=0.0)", py_ttri);

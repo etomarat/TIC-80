@@ -947,6 +947,100 @@ static u8 getButton(SDL_GameController* controller, SDL_GameControllerButton but
         : 0;
 }
 
+static SDL_GameController* getControllerByGamepadIndex(s32 gamepad)
+{
+    s32 index = 0;
+
+    for(s32 i = 0; i < COUNT_OF(platform.gamepad.ports); i++)
+    {
+        SDL_GameController* controller = platform.gamepad.ports[i];
+
+        if(controller && SDL_GameControllerGetAttached(controller))
+        {
+            if(index == gamepad)
+            {
+                return controller;
+            }
+
+            index++;
+        }
+    }
+
+    return NULL;
+}
+
+static bool rumbleController(SDL_GameController* controller, u16 weak, u16 strong, u32 duration)
+{
+    static bool RumbleFaulted = false;
+
+    if(RumbleFaulted)
+    {
+        return false;
+    }
+
+    if(!controller || !SDL_GameControllerGetAttached(controller))
+    {
+        return false;
+    }
+
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+    if(!SDL_GameControllerHasRumble(controller))
+    {
+        return false;
+    }
+#endif
+
+#if defined(__TIC_WINDOWS__) && defined(_MSC_VER)
+    __try
+    {
+        return SDL_GameControllerRumble(controller, weak, strong, duration) == 0;
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER)
+    {
+        RumbleFaulted = true;
+        return false;
+    }
+#else
+    return SDL_GameControllerRumble(controller, weak, strong, duration) == 0;
+#endif
+}
+
+bool tic_sys_gamepad_rumble(s32 gamepad, u16 weak, u16 strong, u32 duration)
+{
+#if SDL_VERSION_ATLEAST(2, 0, 9)
+    if(gamepad < -1 || gamepad >= TIC_GAMEPADS)
+    {
+        return false;
+    }
+
+    if(gamepad == -1)
+    {
+        bool rumble = false;
+
+        for(s32 i = 0; i < COUNT_OF(platform.gamepad.ports); i++)
+        {
+            SDL_GameController* controller = platform.gamepad.ports[i];
+
+            if(controller)
+            {
+                rumble |= rumbleController(controller, weak, strong, duration);
+            }
+        }
+
+        return rumble;
+    }
+
+    SDL_GameController* controller = getControllerByGamepadIndex(gamepad);
+    return rumbleController(controller, weak, strong, duration);
+#else
+    (void)gamepad;
+    (void)weak;
+    (void)strong;
+    (void)duration;
+    return false;
+#endif
+}
+
 static void processGamepad()
 {
     {

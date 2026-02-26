@@ -60,6 +60,7 @@ char*   tic_sys_clipboard_get();
 void    tic_sys_clipboard_free(const char* text);
 u64     tic_sys_counter_get();
 u64     tic_sys_freq_get();
+bool    tic_sys_gamepad_rumble(s32 gamepad, u16 weak, u16 strong, u32 duration);
 bool    tic_sys_fullscreen_get();
 void    tic_sys_fullscreen_set(bool value);
 void    tic_sys_message(const char* title, const char* message);

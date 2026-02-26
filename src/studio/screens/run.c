@@ -131,6 +131,12 @@ static u64 getCounter(void* data)
     return tic_sys_counter_get();
 }
 
+static bool rumble(void* data, s32 gamepad, u16 weak, u16 strong, u32 duration)
+{
+    (void)data;
+    return tic_sys_gamepad_rumble(gamepad, weak, strong, duration);
+}
+
 void initRun(Run* run, Console* console, tic_fs* fs, Studio* studio)
 {
     *run = (Run)
@@ -148,7 +154,8 @@ void initRun(Run* run, Console* console, tic_fs* fs, Studio* studio)
             .exit = onExit,
             .data = run,
             .counter = getCounter,
-            .freq = getFreq
+            .freq = getFreq,
+            .rumble = rumble
         },
     };
 
