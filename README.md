@@ -67,6 +67,29 @@ To make a retro styled game, the whole process of creation and execution takes p
 - An additional memory bank: load different assets from your cartridge while your game is executing
 - Moderated community
 
+### Controller Trigger/Shoulder Aliases (this fork)
+This fork adds SDL gamepad aliases so trigger/shoulder buttons duplicate face buttons:
+
+- `RT` duplicates `A` (South)
+- `LT` duplicates `B` (East)
+- `LB` duplicates `X` (West)
+- `RB` duplicates `Y` (North)
+
+Notes:
+
+- This does not add new TIC-80 buttons; it only mirrors existing `A/B/X/Y` input.
+- Existing keyboard controls and original face button mapping are unchanged.
+- Implemented in the SDL backend (`src/system/sdl/main.c`).
+
+Supported platforms (SDL backend):
+
+- Windows
+- Linux
+- macOS
+- Web (Emscripten/HTML build)
+
+Other backends (for example libretro/3DS/Switch/baremetal) are unchanged.
+
 # Binary Downloads
 
 ## Stable Builds
